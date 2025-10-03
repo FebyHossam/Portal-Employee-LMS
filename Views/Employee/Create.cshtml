@@ -1,0 +1,233 @@
+﻿@model Leave_Mangement_System.ViewModels.CreateEmployeeViewModel
+
+@{
+    ViewData["Title"] = "Create Employee";
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-user-plus"></i> Create Employee
+    </h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">Employee Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="EmployeeName" class="form-label text-dark">Employee Name *</label>
+                                    <input asp-for="EmployeeName" class="form-control" required />
+                                    <span asp-validation-for="EmployeeName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Email" class="form-label text-dark">Email Address *</label>
+                                    <input asp-for="Email" class="form-control" type="email" required />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                       
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DeptId" class="form-label text-dark">Department *</label>
+                                    <select asp-for="DeptId" class="form-select" asp-items="ViewBag.Departments" required>
+                                        <option value="">-- Select Department --</option>
+                                    </select>
+                                    <span asp-validation-for="DeptId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="PolicyId" class="form-label text-dark">Leave Policy *</label>
+                                    <select asp-for="PolicyId" class="form-select" asp-items="ViewBag.Policies" required>
+                                        <option value="">-- Select Policy --</option>
+                                    </select>
+                                    <span asp-validation-for="PolicyId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                       
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="JobTitle" class="form-label text-dark">Job Title</label>
+                                    <input asp-for="JobTitle" class="form-control" />
+                                    <span asp-validation-for="JobTitle" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label text-dark">Phone Number</label>
+                                    <input asp-for="PhoneNumber" class="form-control" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label asp-for="LeaveBalance" class="form-label text-dark">Leave Balance</label>
+                                <input asp-for="LeaveBalance" class="form-control" type="number" min="0" />
+                                <span asp-validation-for="LeaveBalance" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Address" class="form-label text-dark">Address</label>
+                            <input asp-for="Address" class="form-control" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                       
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3 mt-2">
+                                    <input class="form-check-input" asp-for="Manager" type="checkbox" />
+                                    <label class="form-check-label text-dark" asp-for="Manager">
+                                        <i class="fas fa-user-tie text-muted"></i> Is Manager
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3 mt-2">
+                                    <input class="form-check-input" asp-for="Hr" type="checkbox" />
+                                    <label class="form-check-label text-dark" asp-for="Hr">
+                                        <i class="fas fa-users-cog text-muted"></i> Is HR
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <h6 class="text-dark">Manager Information (Optional)</h6>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ManagerName" class="form-label text-dark">Manager Name</label>
+                                    <input asp-for="ManagerName" class="form-control" />
+                                    <span asp-validation-for="ManagerName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ManagerEmail" class="form-label text-dark">Manager Email</label>
+                                    <input asp-for="ManagerEmail" class="form-control" type="email" />
+                                    <span asp-validation-for="ManagerEmail" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Employee
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-md-4">
+            <div class="card bg-light border">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Create Information</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong class="text-dark">Unique Email</strong><br />
+                            <small class="text-muted">Email will be used as login username</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Department & Policy</strong><br />
+                            <small class="text-muted">Assign correct department & policy</small>
+                        </li>
+                        <li>
+                            <strong class="text-dark">Role Options</strong><br />
+                            <small class="text-muted">Manager/HR roles affect system permissions</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light border mt-3">
+                <div class="card-body">
+                    <h6 class="text-dark"><i class="fas fa-exclamation-triangle text-muted"></i> Important Notes</h6>
+                    <ul class="mb-0">
+                        <li class="text-dark mb-1">Employee will receive account credentials</li>
+                        <li class="text-dark mb-1">Ensure data accuracy before saving</li>
+                        <li class="text-dark">Changes take effect immediately</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #ced4da;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #103A71;
+                box-shadow: 0 0 0 0.2rem rgba(16, 58, 113, 0.25);
+            }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .card.bg-light {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

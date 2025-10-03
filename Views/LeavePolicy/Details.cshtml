@@ -1,0 +1,180 @@
+﻿@model LeavePolicy
+@{
+    ViewData["Title"] = "Policy Details";
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-info-circle"></i> Leave Policy Details
+    </h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">Policy Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3 text-dark">Policy ID</dt>
+                        <dd class="col-sm-9 text-muted">@Model.PolicyId</dd>
+
+                        <dt class="col-sm-3 text-dark">Policy Name</dt>
+                        <dd class="col-sm-9 text-muted">@Model.PolicyName</dd>
+
+                        <dt class="col-sm-3 text-dark">Regular Days</dt>
+                        <dd class="col-sm-9 text-muted">@Model.RegularDays days</dd>
+
+                        <dt class="col-sm-3 text-dark">Exception Days</dt>
+                        <dd class="col-sm-9 text-muted">@Model.ExceptionDays days</dd>
+
+                        <dt class="col-sm-3 text-dark">Total Days</dt>
+                        <dd class="col-sm-9 text-muted">@(Model.RegularDays + Model.ExceptionDays) days</dd>
+
+                        <dt class="col-sm-3 text-dark">Assigned Employees</dt>
+                        <dd class="col-sm-9 text-muted">@Model.Employees.Count employees</dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (Model.Employees.Any())
+            {
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header custom-header">
+                        <h5 class="mb-0 text-white">
+                            <i class="fas fa-users"></i> Employees with this Policy
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-dark">Name</th>
+                                    <th class="text-dark">Department</th>
+                                    <th class="text-dark">Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var employee in Model.Employees)
+                                {
+                                    <tr>
+                                        <td class="text-dark">@employee.EmployeeName</td>
+                                        <td class="text-muted">@employee.Department.Name</td>
+                                        <td>
+                                            @if (employee.Manager)
+                                            {
+                                                <span class="badge bg-dark">Manager</span>
+                                            }
+                                            @if (employee.Hr)
+                                            {
+                                                <span class="badge bg-dark">HR</span>
+                                            }
+                                            @if (!employee.Manager && !employee.Hr)
+                                            {
+                                                <span class="badge bg-secondary">Employee</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <div class="mb-4">
+                <a asp-action="Edit" asp-route-id="@Model.PolicyId" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Policy
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light border">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Policy Summary</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong class="text-dark">Policy ID</strong><br />
+                            <small class="text-muted">Unique identifier: @Model.PolicyId</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Total Leave Days</strong><br />
+                            <small class="text-muted">@(Model.RegularDays + Model.ExceptionDays) days annually</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Coverage</strong><br />
+                            <small class="text-muted">@Model.Employees.Count employees assigned</small>
+                        </li>
+                        <li>
+                            <strong class="text-dark">Policy Status</strong><br />
+                            <small class="text-muted">@(Model.Employees.Count > 0 ? "Active - In Use" : "Inactive - No Assignments")</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(0,0,0,.025);
+        }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .card.bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        .badge {
+            font-size: 0.75em;
+        }
+
+        dt {
+            font-weight: 600;
+        }
+    </style>
+}

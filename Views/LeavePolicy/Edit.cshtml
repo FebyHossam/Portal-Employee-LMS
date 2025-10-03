@@ -1,0 +1,151 @@
+﻿@model LeavePolicy
+@{
+    ViewData["Title"] = "Edit Leave Policy";
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-edit"></i> Edit Leave Policy
+    </h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">Policy Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="PolicyId" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="PolicyName" class="form-label text-dark">Policy Name *</label>
+                            <input asp-for="PolicyName" class="form-control" required />
+                            <div class="form-text text-muted">Enter a unique policy name</div>
+                            <span asp-validation-for="PolicyName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="RegularDays" class="form-label text-dark">Regular Days *</label>
+                            <input asp-for="RegularDays" class="form-control" type="number" min="0" max="365" required />
+                            <div class="form-text text-muted">Standard annual leave days</div>
+                            <span asp-validation-for="RegularDays" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="ExceptionDays" class="form-label text-dark">Exception Days *</label>
+                            <input asp-for="ExceptionDays" class="form-control" type="number" min="0" max="100" required />
+                            <div class="form-text text-muted">Additional leave days for special circumstances</div>
+                            <span asp-validation-for="ExceptionDays" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Policy
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-light border">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Policy Guidelines</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong class="text-dark">Regular Days</strong><br />
+                            <small class="text-muted">Standard annual leave allowance (0-365 days)</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Exception Days</strong><br />
+                            <small class="text-muted">Additional leave for special circumstances (0-100 days)</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Total Allowance</strong><br />
+                            <small class="text-muted">Regular Days + Exception Days = Total Leave</small>
+                        </li>
+                        <li>
+                            <strong class="text-dark">Employee Assignment</strong><br />
+                            <small class="text-muted">Policy can be assigned to multiple employees</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light border mt-3">
+                <div class="card-body">
+                    <h6 class="text-dark"><i class="fas fa-lightbulb text-muted"></i> Current Policy</h6>
+                    <ul class="mb-0">
+                        <li class="text-muted">Policy Name: @Model.PolicyName</li>
+                        <li class="text-muted">Regular Days: @Model.RegularDays</li>
+                        <li class="text-muted">Exception Days: @Model.ExceptionDays</li>
+                        <li class="text-muted">Total Days: @(Model.RegularDays + Model.ExceptionDays)</li>
+                        <li class="text-muted">Assigned Employees: @Model.Employees.Count</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .form-control {
+            border: 1px solid #ced4da;
+        }
+
+            .form-control:focus {
+                border-color: #103A71;
+                box-shadow: 0 0 0 0.2rem rgba(16, 58, 113, 0.25);
+            }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .card.bg-light {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

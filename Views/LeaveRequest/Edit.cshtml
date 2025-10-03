@@ -1,0 +1,449 @@
+﻿@model Leave_Mangement_System.Models.LeaveRequest
+
+@{
+    ViewData["Title"] = "Edit Leave Request";
+    var isHRPrimary = User.IsInRole("HRPrimary");
+    var isManager = User.IsInRole("Manager");
+    var isRegularEmployee = !isHRPrimary && !isManager;
+}
+
+<h1 class="page-title">
+    <i class="fas fa-edit"></i> Edit Leave Request #@Model.RequestId
+</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-light border border-success alert-dismissible fade show">
+        <i class="fas fa-check-circle text-success"></i>
+        <span class="text-dark">@TempData["SuccessMessage"]</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-light border border-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-triangle text-danger"></i>
+        <span class="text-dark">@TempData["ErrorMessage"]</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-light border border-danger">
+        <ul class="mb-0 text-dark">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li><i class="fas fa-exclamation-circle text-danger"></i> @error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<form asp-action="Edit" asp-controller="LeaveRequest" method="post">
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.RequestId)
+
+    <div class="row">
+        <!-- Employee Information -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-user"></i> Employee Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (isHRPrimary || isManager)
+                    {
+                        <!-- المدير و HR يختاروا موظف -->
+                        <div class="form-group mb-3">
+                            <label asp-for="EmpId" class="form-label text-dark">
+                                Select Employee <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="EmpId" class="form-control" id="employeeSelect" required>
+                                <option value="">-- Select Employee --</option>
+                                @if (ViewBag.Employees != null)
+                                {
+                                    @foreach (var employee in ViewBag.Employees)
+                                    {
+                                        @if (Model.EmpId.ToString() == employee.Value)
+                                        {
+                                            <option value="@employee.Value" selected>@employee.Text</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@employee.Value">@employee.Text</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="EmpId" class="text-danger"></span>
+                        </div>
+
+                        <!-- بيانات الموظف المختار (read-only) -->
+                        <div id="selectedEmployeeInfo">
+                            <div class="alert alert-light border">
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label text-dark"><strong>Job Title:</strong></label>
+                                        <p class="text-muted mb-0" id="selectedJobTitle">@Model.Employee?.JobTitle</p>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label text-dark"><strong>Department:</strong></label>
+                                        <p class="text-muted mb-0" id="selectedDepartment">@Model.Employee?.Department?.Name</p>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label text-dark"><strong>Phone:</strong></label>
+                                        <p class="text-muted mb-0" id="selectedPhone">@Model.Employee?.PhoneNumber</p>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label text-dark"><strong>Leave Balance:</strong></label>
+                                        <p class="text-muted mb-0" id="selectedBalance">@Model.Employee?.LeaveBalance days</p>
+                                    </div>
+                                    <div class="col-md-12 mb-2">
+                                        <label class="form-label text-dark"><strong>Address:</strong></label>
+                                        <p class="text-muted mb-0" id="selectedAddress">@Model.Employee?.Address</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- الموظف العادي -->
+                        @Html.HiddenFor(m => m.EmpId)
+
+                        <!-- ✅ Hidden inputs عشان تبعت البيانات للـ Controller -->
+                        <input type="hidden" name="EmployeeJobTitle" value="@(Model.Employee?.JobTitle ?? ViewBag.CurrentEmployeeJobTitle)" />
+                        <input type="hidden" name="EmployeePhoneNumber" value="@(Model.Employee?.PhoneNumber ?? ViewBag.CurrentEmployeePhone)" />
+                        <input type="hidden" name="EmployeeAddress" value="@(Model.Employee?.Address ?? ViewBag.CurrentEmployeeAddress)" />
+                        <input type="hidden" name="EmployeeDeptId" value="@(Model.Employee?.DeptId ?? ViewBag.CurrentEmployeeDeptId)" />
+
+                        <div class="mb-3">
+                            <h6 class="text-dark">Employee: @ViewBag.CurrentEmployeeName</h6>
+                            <small class="text-muted">Your personal information is fixed (read-only)</small>
+                        </div>
+
+                        <div class="alert alert-light border">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label text-dark"><strong>Job Title:</strong></label>
+                                    <p class="text-muted mb-0">@(Model.Employee?.JobTitle ?? ViewBag.CurrentEmployeeJobTitle)</p>
+                                </div>
+
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label text-dark"><strong>Department:</strong></label>
+                                    <p class="text-muted mb-0">@(Model.Employee?.Department?.Name ?? ViewBag.CurrentEmployeeDepartmentName)</p>
+                                </div>
+
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label text-dark"><strong>Phone Number:</strong></label>
+                                    <p class="text-muted mb-0">@(Model.Employee?.PhoneNumber ?? ViewBag.CurrentEmployeePhone)</p>
+                                </div>
+
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label text-dark"><strong>Leave Balance:</strong></label>
+                                    <p class="text-muted mb-0">@(Model.Employee?.LeaveBalance ?? ViewBag.CurrentEmployeeBalance) days</p>
+                                </div>
+
+                                <div class="col-md-12 mb-2">
+                                    <label class="form-label text-dark"><strong>Address:</strong></label>
+                                    <p class="text-muted mb-0">@(Model.Employee?.Address ?? ViewBag.CurrentEmployeeAddress)</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Request Details -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-calendar-alt"></i> Leave Request Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <label asp-for="LeaveType" class="form-label text-dark">
+                            Leave Type <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="LeaveType" class="form-control" required>
+                            <option value="">-- Select Leave Type --</option>
+                            <option value="Annual">Annual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Emergency">Emergency Leave</option>
+                            <option value="Casual">Casual Leave</option>
+                            <option value="Maternity">Maternity Leave</option>
+                            <option value="Unpaid">Unpaid Leave</option>
+                        </select>
+                        <span asp-validation-for="LeaveType" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="StartDate" class="form-label text-dark">
+                                    Start Date <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="StartDate" type="date" class="form-control" id="startDate" required />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="EndDate" class="form-label text-dark">
+                                    End Date <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="EndDate" type="date" class="form-control" id="endDate" required />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label text-dark">Number of Days:</label>
+                        <p class="form-control bg-light text-center text-muted" id="calculatedDays">@Model.NumberOfDays days</p>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Reason" class="form-label text-dark">
+                            Reason (Optional)
+                        </label>
+                        <textarea asp-for="Reason" class="form-control" rows="4"
+                                  placeholder="Please provide a reason for your leave request..."></textarea>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+
+                    <!-- Current Status Display -->
+                    <div class="alert alert-light border">
+                        <h6 class="text-dark"><i class="fas fa-info-circle text-primary"></i> Current Status:</h6>
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <small class="text-muted d-block">Manager</small>
+                                @if (Model.ManagerApproved)
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pending</span>
+                                }
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <small class="text-muted d-block">HR</small>
+                                @if (Model.HrApproved)
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pending</span>
+                                }
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <small class="text-muted d-block">Status</small>
+                                @if (Model.IsRejected)
+                                {
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                                else if (Model.ManagerApproved && Model.HrApproved)
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+            <i class="fas fa-save"></i> Update Leave Request
+        </button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .form-control {
+            border: 1px solid #ced4da;
+        }
+
+            .form-control:focus {
+                border-color: #103A71;
+                box-shadow: 0 0 0 0.2rem rgba(16, 58, 113, 0.25);
+            }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .alert-light {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        #calculatedDays {
+            font-weight: 600;
+            border: 2px dashed #dee2e6;
+        }
+
+        .badge {
+            font-size: 0.85em;
+            padding: 0.5em 0.75em;
+        }
+
+        .bg-success {
+            background-color: #28a745 !important;
+        }
+
+        .bg-warning {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+        }
+
+        .bg-danger {
+            background-color: #dc3545 !important;
+        }
+
+        .bg-secondary {
+            background-color: #6c757d !important;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            // Calculate days automatically
+            function calculateDays() {
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+
+                if (startDate && endDate) {
+                    var start = new Date(startDate);
+                    var end = new Date(endDate);
+
+                    if (end >= start) {
+                        var timeDiff = Math.abs(end.getTime() - start.getTime());
+                        var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                        $('#calculatedDays').text(daysDiff + ' days');
+                    } else {
+                        $('#calculatedDays').text('Invalid date range');
+                    }
+                } else {
+                    $('#calculatedDays').text('0 days');
+                }
+            }
+
+            // Calculate days on page load
+            calculateDays();
+
+            // Monitor date changes
+            $('#startDate, #endDate').on('change', calculateDays);
+
+            // Employee selection (for HR Primary and Managers)
+            $('#employeeSelect').on('change', function() {
+                var employeeId = $(this).val();
+
+                if (employeeId) {
+                    $.ajax({
+                        url: '@Url.Action("GetEmployeeData", "LeaveRequest")',
+                        type: 'GET',
+                        data: { employeeId: employeeId },
+                        success: function(response) {
+                            if (response.success) {
+                                $('#selectedJobTitle').text(response.jobTitle || '-');
+                                $('#selectedDepartment').text(response.departmentName || '-');
+                                $('#selectedPhone').text(response.phoneNumber || '-');
+                                $('#selectedAddress').text(response.address || '-');
+                                $('#selectedBalance').text((response.leaveBalance || 0) + ' days');
+                            } else {
+                                alert('Error loading employee data: ' + response.message);
+                            }
+                        },
+                        error: function() {
+                            alert('Error occurred while loading employee data');
+                        }
+                    });
+                }
+            });
+
+            // Update end date when start date changes
+            $('#startDate').on('change', function() {
+                var startDate = $(this).val();
+                if (startDate) {
+                    $('#endDate').attr('min', startDate);
+                    if ($('#endDate').val() < startDate) {
+                        $('#endDate').val(startDate);
+                    }
+                }
+                calculateDays();
+            });
+
+            // Validate before submit
+            $('form').on('submit', function(e) {
+                var isValid = true;
+
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+
+                if (!startDate || !endDate) {
+                    alert('Please select both start and end dates.');
+                    isValid = false;
+                }
+
+                if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+                    alert('End date must be after start date.');
+                    isValid = false;
+                }
+
+                return isValid;
+            });
+        });
+    </script>
+}

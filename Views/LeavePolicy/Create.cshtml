@@ -1,0 +1,64 @@
+﻿@model LeavePolicy
+@{
+    ViewData["Title"] = "Create Leave Policy";
+}
+
+<h1><i class="fas fa-plus"></i> Create Leave Policy</h1>
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Leave Policies</a></li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">New Leave Policy</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="PolicyName" class="form-label">Policy Name *</label>
+                        <input asp-for="PolicyName" class="form-control" placeholder="e.g., Senior Management Policy" required />
+                        <span asp-validation-for="PolicyName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="RegularDays" class="form-label">Regular Days *</label>
+                        <input asp-for="RegularDays" class="form-control" type="number" min="0" max="365" required />
+                        <div class="form-text">Standard annual leave days</div>
+                        <span asp-validation-for="RegularDays" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="ExceptionDays" class="form-label">Exception Days *</label>
+                        <input asp-for="ExceptionDays" class="form-control" type="number" min="0" max="100" required />
+                        <div class="form-text">Additional leave days for special circumstances</div>
+                        <span asp-validation-for="ExceptionDays" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Create Policy
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

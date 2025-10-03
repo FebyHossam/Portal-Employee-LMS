@@ -1,0 +1,254 @@
+﻿@model Leave_Mangement_System.ViewModels.LeaveRequestIndexViewModel
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Leave_Mangement_System.Models.ApplicationUser> UserManager
+@inject Leave_Mangement_System.Service.IEmployeeService EmployeeService
+
+@{
+    ViewData["Title"] = "Leave Requests";
+    var currentUser = await UserManager.FindByEmailAsync(User.Identity?.Name ?? "");
+    var currentEmployee = EmployeeService.GetAll()?.FirstOrDefault(e => e.UserId == currentUser.Id || e.Email == currentUser.Email);
+    var currentUserDeptId = currentEmployee?.DeptId ?? 0;
+
+    var isManager = User.IsInRole("Manager");
+    var isHRPrimary = User.IsInRole("HRPrimary");
+
+    // تحديد إذا كان المدير عنده طلبات شخصية وطلبات فريق
+    var showTabs = (isManager || isHRPrimary) ;
+}
+
+<h1 class="page-title">
+    <i class="fas fa-calendar-alt"></i> Leave Requests Management
+</h1>
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create New Request
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-light border border-success alert-dismissible fade show">
+        <i class="fas fa-check-circle text-success"></i>
+        <span class="text-dark">@TempData["SuccessMessage"]</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-light border border-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-triangle text-danger"></i>
+        <span class="text-dark">@TempData["ErrorMessage"]</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-light border border-warning alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle text-warning"></i>
+        <span class="text-dark">@TempData["WarningMessage"]</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (showTabs)
+{
+    <!-- Tabs للمدير والـ HR -->
+    <ul class="nav nav-tabs mb-3" id="requestTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="my-requests-tab" data-bs-toggle="tab"
+                    data-bs-target="#my-requests" type="button" role="tab">
+                <i class="fas fa-user"></i> My Requests
+                <span class="badge bg-primary">@Model.MyRequests.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="team-requests-tab" data-bs-toggle="tab"
+                    data-bs-target="#team-requests" type="button" role="tab">
+                <i class="fas fa-users"></i> @(isHRPrimary ? "All Employees" : "Team") Requests
+                <span class="badge bg-success">@Model.TeamRequests.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="requestTabsContent">
+        <!-- My Requests Tab -->
+        <div class="tab-pane fade show active" id="my-requests" role="tabpanel">
+            @if (Model.MyRequests.Any())
+            {
+                @await Html.PartialAsync("_LeaveRequestsTable", Model.MyRequests)
+
+                <div class="card bg-light border mt-3">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col">
+                                <strong class="text-dark">Total:</strong>
+                                <span class="text-muted">@Model.MyRequests.Count requests</span>
+                            </div>
+                            <div class="col">
+                                <strong class="text-dark">Pending:</strong>
+                                <span class="text-muted">@Model.MyRequests.Count(x => !x.ManagerApproved && !x.IsRejected)</span>
+                            </div>
+                            <div class="col">
+                                <strong class="text-dark">Approved:</strong>
+                                <span class="text-muted">@Model.MyRequests.Count(x => x.HrApproved && x.ManagerApproved)</span>
+                            </div>
+                            <div class="col">
+                                <strong class="text-dark">Rejected:</strong>
+                                <span class="text-muted">@Model.MyRequests.Count(x => x.IsRejected)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> You haven't submitted any leave requests yet.
+                    <a asp-action="Create" class="btn btn-sm btn-primary ms-3">
+                        <i class="fas fa-plus"></i> Create Request
+                    </a>
+                </div>
+            }
+        </div>
+
+        <!-- Team Requests Tab -->
+        <div class="tab-pane fade" id="team-requests" role="tabpanel">
+            @if (Model.TeamRequests.Any())
+            {
+                @await Html.PartialAsync("_LeaveRequestsTable", Model.TeamRequests)
+
+                <div class="card bg-light border mt-3">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col">
+                                <strong class="text-dark">Total:</strong>
+                                <span class="text-muted">@Model.TeamRequests.Count requests</span>
+                            </div>
+                            <div class="col">
+                                <strong class="text-dark">Pending Manager:</strong>
+                                <span class="text-muted">@Model.TeamRequests.Count(x => !x.ManagerApproved && !x.IsRejected)</span>
+                            </div>
+                            <div class="col">
+                                <strong class="text-dark">Waiting HR:</strong>
+                                <span class="text-muted">@Model.TeamRequests.Count(x => x.ManagerApproved && !x.HrApproved && !x.IsRejected)</span>
+                            </div>
+                            <div class="col">
+                                <strong class="text-dark">Approved:</strong>
+                                <span class="text-muted">@Model.TeamRequests.Count(x => x.HrApproved && x.ManagerApproved)</span>
+                            </div>
+                            <div class="col">
+                                <strong class="text-dark">Rejected:</strong>
+                                <span class="text-muted">@Model.TeamRequests.Count(x => x.IsRejected)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No @(isHRPrimary ? "employee" : "team") requests found.
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <!-- عرض عادي للموظف العادي -->
+    @if (Model.MyRequests.Any())
+    {
+        @await Html.PartialAsync("_LeaveRequestsTable", Model.MyRequests)
+
+        <div class="card bg-light border mt-3 mb-5">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col">
+                        <strong class="text-dark">Total:</strong>
+                        <span class="text-muted">@Model.MyRequests.Count requests</span>
+                    </div>
+                    <div class="col">
+                        <strong class="text-dark">Pending:</strong>
+                        <span class="text-muted">@Model.MyRequests.Count(x => !x.ManagerApproved && !x.IsRejected)</span>
+                    </div>
+                    <div class="col">
+                        <strong class="text-dark">Approved:</strong>
+                        <span class="text-muted">@Model.MyRequests.Count(x => x.HrApproved && x.ManagerApproved)</span>
+                    </div>
+                    <div class="col">
+                        <strong class="text-dark">Rejected:</strong>
+                        <span class="text-muted">@Model.MyRequests.Count(x => x.IsRejected)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center mt-4">
+            <div class="card bg-light border">
+                <div class="card-body">
+                    <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-dark">No Leave Requests Found</h5>
+                    <p class="text-muted">Start by creating your first leave request.</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create First Request
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .nav-tabs .nav-link {
+            color: #103A71;
+        }
+
+            .nav-tabs .nav-link.active {
+                color: #103A71;
+                font-weight: bold;
+                border-bottom: 3px solid #103A71;
+            }
+
+        .badge {
+            font-size: 0.75em;
+            padding: 0.35em 0.65em;
+        }
+    </style>
+
+    <script>
+        function confirmDelete(requestId, employeeName) {
+            if (confirm(`Are you sure you want to delete the leave request for ${employeeName}?`)) {
+                window.location.href = '@Url.Action("Delete")/' + requestId;
+            }
+        }
+    </script>
+}
+
+@functions {
+    string GetLeaveTypeText(string leaveType)
+    {
+        return leaveType switch
+        {
+            "Annual" => "Annual",
+            "Sick" => "Sick",
+            "Emergency" => "Emergency",
+            "Casual" => "Casual",
+            "Maternity" => "Maternity",
+            "Unpaid" => "Unpaid",
+            _ => leaveType
+        };
+    }
+}

@@ -1,0 +1,164 @@
+﻿@model LeavePolicy
+@{
+    ViewData["Title"] = "Delete Leave Policy";
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-exclamation-triangle"></i> Delete Leave Policy
+    </h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="alert alert-light border border-warning">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                <strong class="text-dark">Warning!</strong>
+                <span class="text-muted">Are you sure you want to delete this leave policy?</span>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">Policy to Delete: @Model.PolicyName</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3 text-dark">Policy ID</dt>
+                        <dd class="col-sm-9 text-muted">@Model.PolicyId</dd>
+
+                        <dt class="col-sm-3 text-dark">Policy Name</dt>
+                        <dd class="col-sm-9 text-muted">@Model.PolicyName</dd>
+
+                        <dt class="col-sm-3 text-dark">Regular Days</dt>
+                        <dd class="col-sm-9 text-muted">@Model.RegularDays days</dd>
+
+                        <dt class="col-sm-3 text-dark">Exception Days</dt>
+                        <dd class="col-sm-9 text-muted">@Model.ExceptionDays days</dd>
+
+                        <dt class="col-sm-3 text-dark">Total Days</dt>
+                        <dd class="col-sm-9 text-muted">@(Model.RegularDays + Model.ExceptionDays) days</dd>
+
+                        <dt class="col-sm-3 text-dark">Assigned Employees</dt>
+                        <dd class="col-sm-9 text-muted">@Model.Employees.Count employees</dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (Model.Employees.Any())
+            {
+                <div class="alert alert-light border border-danger mt-3">
+                    <i class="fas fa-exclamation-circle text-danger"></i>
+                    <strong class="text-dark">Cannot Delete!</strong>
+                    <span class="text-muted">This policy has @Model.Employees.Count employee(s) assigned. Please reassign employees to another policy first.</span>
+                </div>
+            }
+
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="PolicyId" />
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger" @(Model.Employees.Any() ? "disabled" : "")>
+                        <i class="fas fa-trash"></i> Delete Policy
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light border">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Deletion Impact</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong class="text-dark">Permanent Action</strong><br />
+                            <small class="text-muted">This action cannot be undone</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Employee Impact</strong><br />
+                            <small class="text-muted">@Model.Employees.Count employees currently use this policy</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Data Loss</strong><br />
+                            <small class="text-muted">All policy history will be permanently removed</small>
+                        </li>
+                        <li>
+                            <strong class="text-dark">Required Action</strong><br />
+                            <small class="text-muted">@(Model.Employees.Any() ? "Reassign employees first" : "Ready for deletion")</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            @if (Model.Employees.Any())
+            {
+                <div class="card bg-light border mt-3">
+                    <div class="card-body">
+                        <h6 class="text-dark"><i class="fas fa-users text-muted"></i> Affected Employees</h6>
+                        <ul class="mb-0">
+                            @foreach (var employee in Model.Employees.Take(5))
+                            {
+                                <li class="text-muted">@employee.EmployeeName</li>
+                            }
+                            @if (Model.Employees.Count > 5)
+                            {
+                                <li class="text-muted">... and @(Model.Employees.Count - 5) more</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .card.bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        dt {
+            font-weight: 600;
+        }
+
+        .alert-light {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+    </style>
+}

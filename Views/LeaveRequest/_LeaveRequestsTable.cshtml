@@ -1,0 +1,243 @@
+﻿@model List<Leave_Mangement_System.Models.LeaveRequest>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Leave_Mangement_System.Models.ApplicationUser> UserManager
+@inject Leave_Mangement_System.Service.IEmployeeService EmployeeService
+
+@{
+    var currentUser = await UserManager.FindByEmailAsync(User.Identity?.Name ?? "");
+    var currentEmployee = EmployeeService.GetAll()?.FirstOrDefault(e => e.UserId == currentUser.Id || e.Email == currentUser.Email);
+    var currentUserDeptId = currentEmployee?.DeptId ?? 0;
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="custom-table-header">
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee</th>
+                        <th>Type</th>
+                        <th>Phone</th>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var isHRPrimary = User.IsInRole("HRPrimary");
+                        var isManager = User.IsInRole("Manager");
+                        var isOwner = User.Identity?.Name == item.Employee?.Email;
+                        var isSameDepartment = item.Employee?.DeptId == currentUserDeptId;
+
+                        var canManagerApprove = isManager && isSameDepartment && !item.ManagerApproved && !item.IsRejected && !isOwner;
+                        var canManagerReject = isManager && isSameDepartment && !item.IsRejected && !item.HrApproved && !isOwner;
+
+                        var canHRApprove = isHRPrimary && item.ManagerApproved && !item.HrApproved && !item.IsRejected;
+                        var canHRReject = isHRPrimary && !item.IsRejected && !item.HrApproved;
+
+                        var canEdit = isHRPrimary || (isOwner && !item.ManagerApproved && !item.HrApproved && !item.IsRejected);
+                        var canDelete = isHRPrimary || (isOwner && !item.ManagerApproved && !item.HrApproved && !item.IsRejected);
+
+                        <tr>
+                            <td class="text-dark">#@item.RequestId</td>
+                            <td class="text-dark">
+                                <strong>@item.Employee?.EmployeeName</strong>
+                                <br>
+                                <small class="text-muted">@item.Employee?.Email</small>
+                            </td>
+                            <td class="text-muted">@GetLeaveTypeText(item.LeaveType)</td>
+                            <td class="text-muted">@item.Employee?.PhoneNumber</td>
+                            <td class="text-muted">@item.Employee?.JobTitle</td>
+                            <td class="text-muted">@item.Employee?.Department?.Name</td>
+                            <td class="text-muted">@item.StartDate.ToString("dd/MM/yyyy")</td>
+                            <td class="text-muted">@item.EndDate.ToString("dd/MM/yyyy")</td>
+                            <td class="text-muted">@item.NumberOfDays</td>
+                            <td class="text-muted">@item.Employee?.LeaveBalance</td>
+                            <td class="text-muted">
+                                @if (item.IsRejected)
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle"></i> Rejected
+                                    </span>
+                                }
+                                else if (item.HrApproved && item.ManagerApproved)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-double"></i> Fully Approved
+                                    </span>
+                                    @if (item.HrApprovalDate != null)
+                                    {
+                                        <br>
+                                        <small class="text-muted">@item.HrApprovalDate?.ToString("dd/MM/yyyy")</small>
+                                    }
+                                }
+                                else if (item.ManagerApproved && !item.HrApproved)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-clock"></i> Waiting HR
+                                    </span>
+                                    @if (item.ManagerApprovalDate != null)
+                                    {
+                                        <br>
+                                        <small class="text-muted">Manager: @item.ManagerApprovalDate?.ToString("dd/MM/yyyy")</small>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-hourglass-half"></i> Pending Manager
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <div class="btn-group">
+                                        <button type="button"
+                                                class="btn btn-link btn-sm text-secondary dropdown-toggle"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                                title="Print Options">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item"
+                                                   href="@Url.Action("QuickPrint", new { id = item.RequestId })"
+                                                   target="_blank">
+                                                    <i class="fas fa-bolt text-primary"></i> Quick Print
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <a asp-action="Details" asp-route-id="@item.RequestId"
+                                       class="btn btn-link btn-sm text-secondary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    @if (canEdit)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.RequestId"
+                                           class="btn btn-link btn-sm text-secondary" title="Edit Request">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    }
+
+                                    @if (canDelete)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-link btn-sm text-danger"
+                                                onclick="confirmDelete(@item.RequestId, '@item.Employee?.EmployeeName')"
+                                                title="Delete Request">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    }
+
+                                    @if (canManagerApprove)
+                                    {
+                                        <form asp-action="ManagerApprove" asp-route-requestId="@item.RequestId"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Approve this request as Department Manager?')">
+                                            <button type="submit"
+                                                    class="btn btn-link btn-sm text-success"
+                                                    title="Approve as Manager">
+                                                <i class="fas fa-user-check"></i>
+                                            </button>
+                                        </form>
+                                    }
+
+                                    @if (canHRApprove)
+                                    {
+                                        <form asp-action="HRApprove" asp-route-requestId="@item.RequestId"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Final HR approval? This will deduct leave balance.')">
+                                            <button type="submit"
+                                                    class="btn btn-link btn-sm text-success"
+                                                    title="Final HR Approval">
+                                                <i class="fas fa-check-double"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (isHRPrimary && !item.ManagerApproved && !item.IsRejected)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-link btn-sm text-muted"
+                                                disabled
+                                                title="Waiting for Manager approval first">
+                                            <i class="fas fa-lock"></i>
+                                        </button>
+                                    }
+
+                                    @if (canManagerReject || canHRReject)
+                                    {
+                                        <form asp-action="RejectRequest" asp-route-requestId="@item.RequestId"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to reject this request?')">
+                                            <button type="submit"
+                                                    class="btn btn-link btn-sm text-danger"
+                                                    title="Reject Request">
+                                                <i class="fas fa-times-circle"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-table-header {
+        background-color: #103A71 !important;
+        color: white !important;
+    }
+
+        .custom-table-header th {
+            background-color: #103A71 !important;
+            color: white !important;
+            border-color: #103A71 !important;
+        }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.025);
+    }
+
+    .btn-group .btn {
+        margin-right: 2px;
+        border: none;
+    }
+
+    .badge {
+        font-size: 0.75em;
+        padding: 0.35em 0.65em;
+        font-weight: 500;
+    }
+</style>
+
+@functions {
+    string GetLeaveTypeText(string leaveType)
+    {
+        return leaveType switch
+        {
+            "Annual" => "Annual",
+            "Sick" => "Sick",
+            "Emergency" => "Emergency",
+            "Casual" => "Casual",
+            "Maternity" => "Maternity",
+            "Unpaid" => "Unpaid",
+            _ => leaveType
+        };
+    }
+}

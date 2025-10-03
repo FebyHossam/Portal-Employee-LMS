@@ -1,0 +1,165 @@
+﻿@model Department
+@{
+    ViewData["Title"] = "Department Details";
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-info-circle"></i> Department Details
+    </h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">Department Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3 text-dark">ID</dt>
+                        <dd class="col-sm-9 text-muted">@Html.DisplayFor(model => model.DeptId)</dd>
+                        <dt class="col-sm-3 text-dark">Name</dt>
+                        <dd class="col-sm-9 text-muted">@Html.DisplayFor(model => model.Name)</dd>
+                        <dt class="col-sm-3 text-dark">Employees Count</dt>
+                        <dd class="col-sm-9 text-muted">@Model.Employees.Count</dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (Model.Employees.Any())
+            {
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header custom-header">
+                        <h5 class="mb-0 text-white">
+                            <i class="fas fa-users"></i> Employees in this Department
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-dark">Name</th>
+                                    <th class="text-dark">Email</th>
+                                    <th class="text-dark">Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var employee in Model.Employees)
+                                {
+                                    <tr>
+                                        <td class="text-dark">@employee.EmployeeName</td>
+                                        <td class="text-muted">@employee.Email</td>
+                                        <td>
+                                            @if (employee.Manager)
+                                            {
+                                                <span class="badge bg-dark">Manager</span>
+                                            }
+                                            @if (employee.Hr)
+                                            {
+                                                <span class="badge bg-dark">HR</span>
+                                            }
+                                            @if (!employee.Manager && !employee.Hr)
+                                            {
+                                                <span class="badge bg-secondary">Employee</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <a asp-action="Edit" asp-route-id="@Model.DeptId" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Department
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light border">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Department Info</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong class="text-dark">Department ID</strong><br />
+                            <small class="text-muted">Unique identifier for this department</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Total Employees</strong><br />
+                            <small class="text-muted">Current number of assigned employees</small>
+                        </li>
+                        <li>
+                            <strong class="text-dark">Management</strong><br />
+                            <small class="text-muted">View assigned managers and HR personnel</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(0,0,0,.025);
+        }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .card.bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        .badge {
+            font-size: 0.75em;
+        }
+
+        dt {
+            font-weight: 600;
+        }
+    </style>
+}

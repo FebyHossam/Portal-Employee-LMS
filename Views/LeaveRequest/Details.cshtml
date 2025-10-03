@@ -1,0 +1,444 @@
+﻿@model Leave_Mangement_System.Models.LeaveRequest
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Leave_Mangement_System.Models.ApplicationUser> UserManager
+@inject Leave_Mangement_System.Service.IEmployeeService EmployeeService
+
+@{
+    ViewData["Title"] = "Leave Request Details";
+
+    var currentUser = await UserManager.FindByEmailAsync(User.Identity?.Name ?? "");
+    var currentEmployee = EmployeeService.GetAll()?.FirstOrDefault(e => e.UserId == currentUser.Id || e.Email == currentUser.Email);
+    var currentUserDeptId = currentEmployee?.DeptId ?? 0;
+
+    var isHRPrimary = User.IsInRole("HRPrimary");
+    var isManager = User.IsInRole("Manager");
+    var isSameDepartment = Model.Employee?.DeptId == currentUserDeptId;
+
+    var isOwnRequest = Model.Employee?.UserId == currentUser.Id;
+  
+    var canManagerApprove = isManager && isSameDepartment && !Model.ManagerApproved && !Model.IsRejected;
+    var canManagerReject = isManager && isSameDepartment && !Model.IsRejected && !Model.HrApproved;
+    var canHRApprove = isHRPrimary && Model.ManagerApproved && !Model.HrApproved && !Model.IsRejected;
+    var canHRReject = isHRPrimary && !Model.IsRejected && !Model.HrApproved;
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-info-circle"></i> Leave Request Details
+    </h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">Request #@Model.RequestId</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3 text-dark">Employee</dt>
+                        <dd class="col-sm-9 text-muted">
+                            <strong>@Model.Employee?.EmployeeName</strong>
+                            <br><small>@Model.Employee?.Email</small>
+                            <br><small>@Model.Employee?.Department?.Name Department</small>
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.Employee?.PhoneNumber))
+                        {
+                            <dt class="col-sm-3 text-dark">Phone Number</dt>
+                            <dd class="col-sm-9 text-muted">@Model.Employee.PhoneNumber</dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Employee?.JobTitle))
+                        {
+                            <dt class="col-sm-3 text-dark">Job Title</dt>
+                            <dd class="col-sm-9 text-muted">@Model.Employee.JobTitle</dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Employee?.Address))
+                        {
+                            <dt class="col-sm-3 text-dark">Address</dt>
+                            <dd class="col-sm-9 text-muted">@Model.Employee.Address</dd>
+                        }
+
+                        <dt class="col-sm-3 text-dark">Leave Type</dt>
+                        <dd class="col-sm-9 text-muted">@Model.LeaveType</dd>
+
+                        <dt class="col-sm-3 text-dark">Leave Period</dt>
+                        <dd class="col-sm-9 text-muted">
+                            @Model.StartDate.ToString("dd MMM yyyy") to @Model.EndDate.ToString("dd MMM yyyy")
+                        </dd>
+
+                        <dt class="col-sm-3 text-dark">Number of Days</dt>
+                        <dd class="col-sm-9 text-muted">@Model.NumberOfDays days</dd>
+
+                        @if (!string.IsNullOrEmpty(Model.Reason))
+                        {
+                            <dt class="col-sm-3 text-dark">Leave Reason</dt>
+                            <dd class="col-sm-9 text-muted">@Model.Reason</dd>
+                        }
+
+                        <dt class="col-sm-3 text-dark">Leave Balance</dt>
+                        <dd class="col-sm-9 text-muted">
+                            @if (Model.Employee != null)
+                            {
+                                <span>@Model.Employee.LeaveBalance days remaining</span>
+                                @if (Model.Employee.LeaveBalance < Model.NumberOfDays && !Model.HrApproved && !Model.ManagerApproved)
+                                {
+                                    <br>
+                            
+                                    <small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Insufficient leave balance!</small>
+                                }
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 text-dark">Manager Approved</dt>
+                        <dd class="col-sm-9 text-muted">
+                            @if (Model.ManagerApproved)
+                            {
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Yes</span>
+                                @if (Model.ManagerApprovalDate.HasValue)
+                                {
+                                    <br>
+                            
+                                    <small>on @Model.ManagerApprovalDate.Value.ToString("dd MMM yyyy")</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 text-dark">HR Approved</dt>
+                        <dd class="col-sm-9 text-muted">
+                            @if (Model.HrApproved)
+                            {
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Yes</span>
+                                @if (Model.HrApprovalDate.HasValue)
+                                {
+                                    <br>
+                            
+                                    <small>on @Model.HrApprovalDate.Value.ToString("dd MMM yyyy")</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3 text-dark">Status</dt>
+                        <dd class="col-sm-9 text-muted">
+                            @if (Model.IsRejected)
+                            {
+                                <span class="badge bg-danger"><i class="fas fa-times-circle"></i> Rejected</span>
+                            }
+                            else if (Model.HrApproved && Model.ManagerApproved)
+                            {
+                                <span class="badge bg-success"><i class="fas fa-check-double"></i> Fully Approved</span>
+                            }
+                            else if (Model.ManagerApproved)
+                            {
+                                <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> Waiting for HR</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary"><i class="fas fa-hourglass-half"></i> Pending Manager</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+           
+            @if (isManager || isHRPrimary)
+            {
+                <div class="card shadow-sm mt-3">
+                    <div class="card-header custom-header">
+                        <h6 class="mb-0 text-white">Management Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.IsRejected)
+                        {
+                           
+                            @if (canManagerApprove)
+                            {
+                                <form asp-action="ManagerApprove" asp-route-requestId="@Model.RequestId" method="post" class="d-inline me-2">
+                                    <button type="submit" class="btn btn-success" onclick="return confirm('Approve this request as Department Manager?')">
+                                        <i class="fas fa-user-check"></i> Manager Approve
+                                    </button>
+                                </form>
+                            }
+                            else if (isManager && !isSameDepartment)
+                            {
+                                <button class="btn btn-secondary me-2" disabled title="This employee is not in your department">
+                                    <i class="fas fa-ban"></i> Different Department
+                                </button>
+                            }
+                            else if (isManager && Model.ManagerApproved)
+                            {
+                                <div class="alert alert-light border border-success mb-0">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <span class="text-dark">Already approved by manager</span>
+                                </div>
+                            }
+
+                           
+                            @if (canHRApprove)
+                            {
+                                <form asp-action="HRApprove" asp-route-requestId="@Model.RequestId" method="post" class="d-inline me-2">
+                                    <button type="submit" class="btn btn-success" onclick="return confirm('Final HR approval? This will deduct @Model.NumberOfDays days from employee balance.')">
+                                        <i class="fas fa-check-double"></i> HR Approve
+                                    </button>
+                                </form>
+                            }
+                            else if (isHRPrimary && !Model.ManagerApproved)
+                            {
+                                <button class="btn btn-secondary me-2" disabled title="Manager approval required first">
+                                    <i class="fas fa-lock"></i> HR Approve (Waiting Manager)
+                                </button>
+                            }
+                            else if (isHRPrimary && Model.HrApproved)
+                            {
+                                <div class="alert alert-light border border-success mb-0">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <span class="text-dark">Already approved by HR</span>
+                                </div>
+                            }
+
+                            
+                            @if (canManagerReject || canHRReject)
+                            {
+                                <form asp-action="RejectRequest" asp-route-requestId="@Model.RequestId" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this request?')">
+                                        <i class="fas fa-times-circle"></i> Reject Request
+                                    </button>
+                                </form>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-light border border-danger mb-0">
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                <span class="text-dark">This request has been rejected.</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="card shadow-sm mb-4 ">
+                <div class="card-header custom-header">
+                    <h6 class="mb-0 text-white">Available Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (isHRPrimary)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.RequestId" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        }
+                        else if (User.Identity?.Name == Model.Employee?.Email)
+                        {
+                            @if (!Model.ManagerApproved && !Model.HrApproved)
+                            {
+                                <a asp-action="Edit" asp-route-id="@Model.RequestId" class="btn btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary" disabled title="Cannot modify approved request">
+                                    <i class="fas fa-lock"></i> Editing Locked
+                                </button>
+                            }
+                        }
+
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light border">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Request Summary</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong class="text-dark">Request ID:</strong><br />
+                            <small class="text-muted">#@Model.RequestId</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Employee:</strong><br />
+                            <small class="text-muted">@Model.Employee?.EmployeeName</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Department:</strong><br />
+                            <small class="text-muted">@Model.Employee?.Department?.Name</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Leave Type:</strong><br />
+                            <small class="text-muted">@Model.LeaveType</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Duration:</strong><br />
+                            <small class="text-muted">@Model.NumberOfDays days</small>
+                        </li>
+                        <li>
+                            <strong class="text-dark">Current Status:</strong><br />
+                            <small class="text-muted">
+                                @if (Model.IsRejected)
+                                {
+                                    <span class="text-danger">Rejected</span>
+                                }
+                                else if (Model.HrApproved && Model.ManagerApproved)
+                                {
+                                    <span class="text-success">Fully Approved</span>
+                                }
+                                else if (Model.ManagerApproved)
+                                {
+                                    <span class="text-warning">Waiting for HR</span>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">Pending Manager</span>
+                                }
+                            </small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light border mt-3">
+                <div class="card-body">
+                    <h6 class="text-dark"><i class="fas fa-clock text-muted"></i> Approval Timeline</h6>
+                    <ul class="mb-0 timeline-list">
+                        <li class="text-success mb-2">
+                            <i class="fas fa-check-circle"></i> Request Created
+                        </li>
+                        <li class="mb-2 @(Model.ManagerApproved ? "text-success" : (Model.IsRejected ? "text-danger" : "text-muted"))">
+                            @if (Model.ManagerApproved)
+                            {
+                                <i class="fas fa-check-circle"></i>
+                                <span>Manager Approved</span>
+                                @if (Model.ManagerApprovalDate.HasValue)
+                                {
+                                    <small class="d-block ms-3">@Model.ManagerApprovalDate.Value.ToString("dd MMM yyyy")</small>
+                                }
+                            }
+                            else if (Model.IsRejected)
+                            {
+                                <i class="fas fa-times-circle"></i>
+                                <span>Rejected by Management</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-hourglass-half"></i>
+                                <span>Pending Manager Approval</span>
+                            }
+                        </li>
+                        <li class="@(Model.HrApproved ? "text-success" : (Model.IsRejected ? "text-danger" : "text-muted"))">
+                            @if (Model.HrApproved)
+                            {
+                                <i class="fas fa-check-circle"></i>
+                                <span>HR Approved</span>
+                                @if (Model.HrApprovalDate.HasValue)
+                                {
+                                    <small class="d-block ms-3">@Model.HrApprovalDate.Value.ToString("dd MMM yyyy")</small>
+                                }
+                            }
+                            else if (Model.IsRejected)
+                            {
+                                <i class="fas fa-times-circle"></i>
+                                <span>HR Review Cancelled</span>
+                            }
+                            else if (!Model.ManagerApproved)
+                            {
+                                <i class="fas fa-minus-circle"></i>
+                                <span>Waiting for Manager</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-hourglass-half"></i>
+                                <span>Pending HR Approval</span>
+                            }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5, .custom-header h6 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .card.bg-light {
+            background-color: #f8f9fa !important;
+        }
+
+        dt {
+            font-weight: 600;
+        }
+
+        .alert-light {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        .badge {
+            font-size: 0.85em;
+            padding: 0.4em 0.7em;
+        }
+
+        .timeline-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+            .timeline-list li {
+                padding-left: 0;
+            }
+
+                .timeline-list li i {
+                    width: 20px;
+                }
+    </style>
+}

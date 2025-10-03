@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Employee Management System</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark border-bottom box-shadow mb-3
+                    @(ViewContext.RouteData.Values["action"]?.ToString() == "Login" ? "transparent-navbar" : "black-navbar")">
+            <div class="container-fluid">
+               
+                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/logo1.png" alt="Logo" width="50" height="50" class="logo-nav me-2" />
+                    <span class="text-nav">Employee vacations</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+               
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            @if (User.IsInRole("HRPrimary") || User.IsInRole("Manager") || User.IsInRole("Employee"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-users me-1"></i> Management
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        @* ===== HR ===== *@
+                                        @if (User.IsInRole("HRPrimary"))
+                                        {
+                                            <li><a class="dropdown-item" asp-controller="Employee" asp-action="Index"><i class="fas fa-users me-2"></i>Employees</a></li>
+                                            <li><a class="dropdown-item" asp-controller="Department" asp-action="Index"><i class="fas fa-building me-2"></i>Departments</a></li>
+                                            <li><a class="dropdown-item" asp-controller="LeavePolicy" asp-action="Index"><i class="fas fa-clipboard-list me-2"></i>Leave Policies</a></li>
+                                            <li><a class="dropdown-item" asp-controller="LeaveRequest" asp-action="Index"><i class="fas fa-calendar-alt me-2"></i>Leave Requests</a></li>
+                                        }
+                                        @* ===== Manager ===== *@
+                                        @if (User.IsInRole("Manager"))
+                                        {
+                                            <li><a class="dropdown-item" asp-controller="LeaveRequest" asp-action="Index"><i class="fas fa-calendar-alt me-2"></i>Leave Requests</a></li>
+                                        }
+                                        @* ===== Employee ===== *@
+                                        @if (User.IsInRole("Employee"))
+                                        {
+                                            <li><a class="dropdown-item" asp-controller="LeaveRequest" asp-action="Index"><i class="fas fa-calendar-check me-2"></i>My Requests</a></li>
+                                            <li><a class="dropdown-item" asp-controller="LeaveRequest" asp-action="Create"><i class="fas fa-calendar-plus me-2"></i>New Leave Request</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                        }
+                    </ul>
+
+                    
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle me-1"></i>@User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li class="dropdown-item-text">
+                                        <strong>Email:</strong> @User.Identity.Name
+                                    </li>
+                                    <li class="dropdown-item-text">
+                                        <strong>Roles:</strong>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <span class="badge bg-danger">Admin</span>
+                                        }
+                                        @if (User.IsInRole("Manager"))
+                                        {
+                                            <span class="badge bg-success">Manager</span>
+                                        }
+                                        @if (User.IsInRole("HRPrimary"))
+                                        {
+                                            <span class="badge bg-warning">HR</span>
+                                        }
+                                        @if (User.IsInRole("Employee"))
+                                        {
+                                            <span class="badge bg-info">Employee</span>
+                                        }
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    
+    <div class="container-fluid">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+
+    <footer class="compact-footer text-muted text-center py-3" style="height:41px; background-color:#103A71; color:white;">
+        <div class="container">
+            <span style="color:white" >&copy; 2024 Employee Management System</span>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <span class="ms-3" style="color:white">Welcome, <strong>@User.Identity.Name</strong></span>
+            }
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,313 @@
+﻿@model Employee
+@{
+    ViewData["Title"] = "Employee Details";
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-user"></i> Employee Details
+    </h1>
+
+@if (TempData["GeneratedPassword"] != null && User.IsInRole("HRPrimary"))
+{
+    <div class="alert alert-light border border-success d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-check-circle text-success"></i>
+            <strong>Employee created successfully!</strong><br />
+            <strong>Generated Password:</strong>
+            <code class="fs-5 bg-light text-dark p-2 rounded border" id="password-hidden">@TempData["GeneratedPassword"]</code>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="copy-btn" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('@TempData["GeneratedPassword"]')">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="this.closest('.alert').remove()">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
+    </div>
+}
+
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">@Model.EmployeeName</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3 text-dark">Employee ID</dt>
+                        <dd class="col-sm-9 text-dark">@Model.EmpId</dd>
+
+                        <dt class="col-sm-3 text-dark">Name</dt>
+                        <dd class="col-sm-9"><strong class="text-dark">@Model.EmployeeName</strong></dd>
+
+                        <dt class="col-sm-3 text-dark">Email</dt>
+                        <dd class="col-sm-9 text-dark">@Model.Email</dd>
+
+                        <dt class="col-sm-3 text-dark">Department</dt>
+                        <dd class="col-sm-9 text-dark">@Model.Department.Name</dd>
+
+                        <dt class="col-sm-3 text-dark">Leave Policy</dt>
+                        <dd class="col-sm-9 text-dark">@Model.LeavePolicy.PolicyName</dd>
+
+                        <dt class="col-sm-3 text-dark">Leave Balance</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-light text-dark border">@Model.LeaveBalance days</span>
+                        </dd>
+
+                        <dt class="col-sm-3 text-dark">Position</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Manager)
+                            {
+                                <span class="badge bg-light text-dark border">Manager</span>
+                            }
+                            @if (Model.Hr)
+                            {
+                                <span class="badge bg-light text-dark border">HR</span>
+                            }
+                            @if (!Model.Manager && !Model.Hr)
+                            {
+                                <span class="badge bg-light text-muted border">Employee</span>
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.ManagerName))
+                        {
+                            <dt class="col-sm-3 text-dark">Manager Name</dt>
+                            <dd class="col-sm-9 text-dark">@Model.ManagerName</dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.ManagerEmail))
+                        {
+                            <dt class="col-sm-3 text-dark">Manager Email</dt>
+                            <dd class="col-sm-9 text-dark">@Model.ManagerEmail</dd>
+                        }
+
+                        <dt class="col-sm-3 text-dark">User Account</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.UserId))
+                            {
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fas fa-check text-success"></i> Account Linked
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fas fa-times text-muted"></i> No Account
+                                </span>
+                            }
+                        </dd>
+
+                    @if (TempData["GeneratedPassword"] != null && User.IsInRole("HRPrimary"))
+                    {
+                        <div class="alert alert-light border border-success d-flex justify-content-between align-items-center mt-2">
+                            <div>
+                                <i class="fas fa-key text-success"></i>
+                                <strong>Password Reset Successfully!</strong><br />
+                                <strong>New Password:</strong>
+                                <code class="fs-5 bg-light text-dark p-2 rounded border" id="password-hidden">@TempData["GeneratedPassword"]</code>
+                                <br />
+                                <small class="text-muted">Share this password securely with the employee. They must change it after first login.</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button id="copy-btn" class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('@TempData["GeneratedPassword"]')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="this.closest('.alert').remove()">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    </dl>
+                </div>
+            </div>
+
+            @if (Model.LeaveRequests.Any())
+            {
+                <div class="card mt-3 shadow-sm">
+                    <div class="card-header bg-light border-bottom">
+                        <h6 class="mb-0 text-dark">Leave Requests History</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-dark">Start Date</th>
+                                        <th class="text-dark">End Date</th>
+                                        <th class="text-dark">Days</th>
+                                        <th class="text-dark">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var request in Model.LeaveRequests.OrderByDescending(r => r.StartDate))
+                                    {
+                                        <tr>
+                                            <td class="text-dark">@request.StartDate.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-dark">@request.EndDate.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-dark">@request.NumberOfDays</td>
+                                            <td>
+                                                @if (request.IsRejected)
+                                                {
+                                                    <span class="badge bg-light text-danger border">Rejected</span>
+                                                }
+                                                else if (request.HrApproved && request.ManagerApproved)
+                                                {
+                                                    <span class="badge bg-light text-success border">Approved</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-light text-dark border">Pending</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            @if (User.IsInRole("HRPrimary"))
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light border-bottom">
+                        <h6 class="mb-0 text-dark"><i class="fas fa-tools text-muted"></i> HR Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(Model.UserId))
+                        {
+                            <form asp-controller="Employee" asp-action="ResetPassword" asp-route-employeeId="@Model.EmpId" method="post">
+                                <button type="submit" class="btn btn-outline-secondary w-100 mb-2"
+                                        onclick="return confirm('Generate new password for @Model.EmployeeName?')">
+                                    <i class="fas fa-key"></i> Reset Password
+                                </button>
+                            </form>
+                        }
+
+                        <a asp-action="Edit" asp-route-id="@Model.EmpId" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-edit"></i> Edit Employee
+                        </a>
+
+                        <a asp-action="Delete" asp-route-id="@Model.EmpId" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-trash"></i> Delete Employee
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Quick Stats</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="text-dark"><strong>Total Leave Requests:</strong> @Model.LeaveRequests.Count</li>
+                        <li class="text-dark"><strong>Approved Requests:</strong> @Model.LeaveRequests.Count(r => r.HrApproved && r.ManagerApproved && !r.IsRejected)</li>
+                        <li class="text-dark"><strong>Pending Requests:</strong> @Model.LeaveRequests.Count(r => !r.IsRejected && (!r.HrApproved || !r.ManagerApproved))</li>
+                        <li class="text-dark"><strong>Rejected Requests:</strong> @Model.LeaveRequests.Count(r => r.IsRejected)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary mb-4">
+            <i class="fas fa-arrow-left "></i> Back to List
+        </a>
+    </div>
+
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .badge.bg-light {
+            background-color: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+        }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+            .card.bg-light {
+                background-color: #f8f9fa !important;
+            }
+    </style>
+
+    <script>
+        function togglePasswordDisplay() {
+            const hiddenSpan = document.getElementById('password-hidden');
+            const maskedSpan = document.getElementById('password-masked');
+            const button = document.getElementById('toggle-btn');
+            const icon = document.getElementById('toggle-icon');
+
+            if (hiddenSpan.style.display === 'none') {
+                hiddenSpan.style.display = 'inline';
+                maskedSpan.style.display = 'none';
+                icon.className = 'fas fa-eye-slash';
+                button.innerHTML = '<i class="fas fa-eye-slash"></i> Hide';
+            } else {
+                hiddenSpan.style.display = 'none';
+                maskedSpan.style.display = 'inline';
+                icon.className = 'fas fa-eye';
+                button.innerHTML = '<i class="fas fa-eye"></i> Show';
+            }
+        }
+
+        function copyToClipboard(password) {
+            navigator.clipboard.writeText(password).then(function() {
+                const copyBtn = document.getElementById('copy-btn');
+                const originalHTML = copyBtn.innerHTML;
+
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyBtn.classList.add('btn-success');
+                copyBtn.classList.remove('btn-outline-secondary');
+
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('btn-success');
+                    copyBtn.classList.add('btn-outline-secondary');
+                }, 2000);
+            }).catch(function() {
+                alert('Could not copy password. Please copy manually: ' + password);
+            });
+        }
+    </script>
+}

@@ -1,0 +1,136 @@
+﻿@model Department
+@{
+    ViewData["Title"] = "Edit Department";
+}
+
+    <h1 class="page-title">
+        <i class="fas fa-edit"></i> Edit Department
+    </h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header custom-header">
+                    <h5 class="mb-0 text-white">Department Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="DeptId" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="form-label text-dark">Department Name *</label>
+                            <input asp-for="Name" class="form-control" required />
+                            <div class="form-text text-muted">Enter a unique department name</div>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Department
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-light border">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="fas fa-info-circle text-muted"></i> Department Guidelines</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong class="text-dark">Unique Names</strong><br />
+                            <small class="text-muted">Each department must have a unique name</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Employee Assignment</strong><br />
+                            <small class="text-muted">Employees can be assigned to this department after creation</small>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-dark">Leave Policies</strong><br />
+                            <small class="text-muted">Department can have specific leave policies</small>
+                        </li>
+                        <li>
+                            <strong class="text-dark">Management</strong><br />
+                            <small class="text-muted">Departments can have designated managers</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light border mt-3">
+                <div class="card-body">
+                    <h6 class="text-dark"><i class="fas fa-lightbulb text-muted"></i> Examples</h6>
+                    <ul class="mb-0">
+                        <li class="text-muted">Human Resources</li>
+                        <li class="text-muted">Information Technology</li>
+                        <li class="text-muted">Finance & Accounting</li>
+                        <li class="text-muted">Marketing & Sales</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section Scripts {
+    <style>
+        .page-title {
+            margin-top: 35px;
+            font-size: 20px;
+            font-family: "PT Sans", sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #103A71;
+        }
+
+        .custom-header {
+            background-color: #103A71 !important;
+            border-bottom: 1px solid #103A71 !important;
+            color: white !important;
+        }
+
+            .custom-header h5 {
+                color: white !important;
+            }
+
+        .card {
+            border: 1px solid #dee2e6;
+        }
+
+        .form-control {
+            border: 1px solid #ced4da;
+        }
+
+            .form-control:focus {
+                border-color: #103A71;
+                box-shadow: 0 0 0 0.2rem rgba(16, 58, 113, 0.25);
+            }
+
+        .btn-primary {
+            background-color: #103A71;
+            border-color: #103A71;
+        }
+
+            .btn-primary:hover {
+                background-color: #0d2f5a;
+                border-color: #0d2f5a;
+            }
+
+        .card.bg-light {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
